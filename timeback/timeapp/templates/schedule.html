@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <title>Хичээлийн хуваарь</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        th {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Хичээлийн хуваарь</h1>
+
+    {{schedule}}
+    {% if schedule %}
+    <table>
+        <thead>
+            <tr>
+                <th>Өдөр</th>
+                <th>Цаг</th>
+                <th>Хичээл</th>
+                <th>Өрөө</th>
+                <th>Багш</th>
+                <th>Ангийн жагсаалт</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d, t, r, c in schedule %}
+            <tr>
+                <td>{{ d }}</td>
+                <td>{{ t }}</td>
+                <td>{{ c.name }} ({{ c.sessions }})</td>
+                <td>{{ r.room_id }}</td>
+                <td>{{ c.teacher.name }}</td>
+                <td>
+                    {% for g in c.group_list.all %}
+                        {{ g.group_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Хуваарь олдсонгүй 😢</p>
+    {% endif %}
+</body>
+</html>
