@@ -1,8 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, )  # ← эзэмшигч
 
     def __str__(self):
         return self.name
@@ -17,10 +20,11 @@ class Room(models.Model):
     room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
     room_number = models.JSONField(default=list)
 
-    
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, )  # ← эзэмшигч
+
     # class Meta:
     #     unique_together = ('room_type', 'room_number')
-
 
     def __str__(self):
         return f"{self.room_number} ({self.room_type})"
@@ -30,6 +34,8 @@ class ClassGroup(models.Model):
     hutulbur = models.CharField(max_length=100)
     group_name = models.CharField(max_length=20)
     damjaa = models.IntegerField()
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, )  # ← эзэмшигч
 
     def __str__(self):
         return f"{self.hutulbur} {self.group_name}"
@@ -40,10 +46,10 @@ class Course(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     lesson_type = models.CharField(max_length=20)
     available_room_types = models.JSONField(default=list)
-    group_list = models.ManyToManyField(ClassGroup,blank=True)
+    group_list = models.ManyToManyField(ClassGroup, blank=True)
 
     def __str__(self):
-        return f'{self.name}({self.lesson_type})' 
+        return f'{self.name}({self.lesson_type})'
 
 
 class Schedule(models.Model):
