@@ -95,7 +95,7 @@ export default function Header() {
             <>
               {/* Сайн байнуу, Display Name */}
               <span className="text-sm font-medium text-slate-700">
-                Сайн байнуу, {user.display_name}
+                Сайн байнуу, {user.email}
               </span>
               <button
                 onClick={handleLogout}

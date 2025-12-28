@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Teacher, Room, ClassGroup, Course
 from timeback.settings import sendResponse
+from django.contrib.auth.decorators import login_required
 
 # ---------------- Teacher ----------------
 
@@ -12,7 +13,7 @@ def addTeacher(request, data):
         name = data.get("name")
         if not name:
             return sendResponse(4009)
-        obj = Teacher.objects.create(name=name)
+        obj = Teacher.objects.create(name=name, user=request.user)
         return sendResponse(200, {"id": obj.id})
     except Exception as e:
         print("TEACHER ADD:", e)
@@ -21,7 +22,8 @@ def addTeacher(request, data):
 
 def listTeacher(request, data):
     try:
-        data_list = list(Teacher.objects.all().values("id", "name"))
+        data_list = list(Teacher.objects.filter(
+            user=request.user).values("id", "name"))
         return sendResponse(200, data_list)
     except Exception as e:
         print("TEACHER LIST:", e)
@@ -58,7 +60,7 @@ def deleteTeacher(request, data):
 
 def listRoom(request, data):
     try:
-        data_list = list(Room.objects.all().values(
+        data_list = list(Room.objects.filter(user=request.user).values(
             "id", "room_type", "room_number"))
         return sendResponse(200, data_list)
     except:
@@ -85,7 +87,7 @@ def addRoom(request, data):
             r.save()
         else:
             r = Room.objects.create(
-                room_type=room_type, room_number=room_numbers)
+                room_type=room_type, room_number=room_numbers, user=request.user)
 
         return sendResponse(200, {"id": r.id})
 
@@ -141,7 +143,7 @@ def addClassGroup(request, data):
         if not hutulbur or not group_name or damjaa is None:
             return sendResponse(4009)
         obj = ClassGroup.objects.create(
-            hutulbur=hutulbur, group_name=group_name, damjaa=int(damjaa))
+            hutulbur=hutulbur, group_name=group_name, damjaa=int(damjaa), user=request.user)
         return sendResponse(200, {"id": obj.id})
     except Exception as e:
         print("CLASSGROUP ADD:", e)
@@ -150,7 +152,7 @@ def addClassGroup(request, data):
 
 def listClassGroup(request, data):
     try:
-        data_list = list(ClassGroup.objects.all().values(
+        data_list = list(ClassGroup.objects.filter(user=request.user).values(
             "id", "hutulbur", "group_name", "damjaa"))
         return sendResponse(200, data_list)
     except:
@@ -199,7 +201,7 @@ def addCourse(request, data):
         if not name or not teacher_id or not lesson_type:
             return sendResponse(4009)
         course = Course.objects.create(
-            name=name, teacher_id=teacher_id, lesson_type=lesson_type, available_room_types=room_types)
+            name=name, teacher_id=teacher_id, lesson_type=lesson_type, available_room_types=room_types, user=request.user)
         if groups:
             course.group_list.set(groups)
         return sendResponse(200, {"id": course.id})
@@ -211,7 +213,7 @@ def addCourse(request, data):
 def listCourse(request, data):
     try:
         data_list = []
-        for c in Course.objects.all():
+        for c in Course.objects.filter(user=request.user):
             data_list.append({
                 "id": c.id,
                 "name": c.name,
@@ -263,6 +265,8 @@ def deleteCourse(request, data):
 
 
 @csrf_exempt
+@login_required
+
 def checkService(request):
     if request.method != "POST":
         return JsonResponse(sendResponse(4001))

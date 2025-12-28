@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, )  # ← эзэмшигч
+        User, on_delete=models.CASCADE, default=2)  # Хэн үүсгэсэн
 
     def __str__(self):
         return self.name
@@ -19,6 +19,7 @@ class Room(models.Model):
     ]
     room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
     room_number = models.JSONField(default=list)
+    
 
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, )  # ← эзэмшигч
@@ -47,6 +48,9 @@ class Course(models.Model):
     lesson_type = models.CharField(max_length=20)
     available_room_types = models.JSONField(default=list)
     group_list = models.ManyToManyField(ClassGroup, blank=True)
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=2)
 
     def __str__(self):
         return f'{self.name}({self.lesson_type})'

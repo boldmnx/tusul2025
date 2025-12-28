@@ -1,59 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import TeacherScheduleTable from "@/components/TeacherScheduleTable";
-
 const Timetable = () => {
   const [data, setData] = useState([]);
   const [openSection, setOpenSection] = useState(null); // "teacher" эсвэл "student" эсвэл null
-  const [loading, setLoading] = useState(true); // auth болон data ачааллаж байна
-  const router = useRouter();
-
-  // useEffect(() => {
-  //   let isMounted = true;
-  //   fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
-  //     .then((res) => {
-  //       if (res.status === 200) return res.json();
-  //       throw new Error("Not authenticated");
-  //     })
-  //     .then(() => {
-  //       if (isMounted) setAuthChecked(true);
-  //     })
-  //     .catch(() => {
-  //       if (isMounted) router.replace("/auth/signin");
-  //     });
-
-  //   return () => {
-  //     isMounted = false;
-  //   };
-  // }, [router]);
-
-  useEffect(() => {
-    // Хэрэглэгч auth эсэхийг backend-аас шалгах
-    fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
-      .then((res) => {
-        if (res.status === 401) {
-          // Login хийгээгүй бол redirect
-          router.replace("/signin");
-        } else {
-          return res.json();
-        }
-      })
-      .then((resData) => {
-        if (resData) {
-          if (!resData.length || !resData[0].entries.length) {
-            setData(null); // дата алга байна
-          } else {
-            setData(resData[0].entries);
-          }
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setData(null);
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
 
   const downloadPdf = async () => {
     try {
@@ -94,16 +44,6 @@ const Timetable = () => {
         setData(null);
       });
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-violet-600 font-bold text-lg animate-pulse">
-          Session шалгаж байна...
-        </p>
-      </div>
-    );
-  }
 
   if (data === null) {
     return (

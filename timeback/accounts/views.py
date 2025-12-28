@@ -79,7 +79,9 @@ def user_register(request):
 
         if user_form.is_valid() and account_form.is_valid():
             user = user_form.save(commit=False)
-            user.username = uuid.uuid4().hex[:30]
+            # user.username = uuid.uuid4().hex[:30]
+            user.username = user_form.cleaned_data['email']  # email-г username болгож хадгалах
+
             user.set_password(user_form.cleaned_data['password'])
             user.save()
 
