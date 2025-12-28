@@ -55,7 +55,7 @@ def schedule_view(request):
     schedules = generate_schedules(course_list, num_schedules=10)
     formatted_schedules = []
 
-    for i, sch in enumerate(schedules[:1], 1):
+    for i, sch in enumerate(schedules[:2], 1):
         entries = []
         for day, time, room, course in sch:
             entries.append({
@@ -73,13 +73,13 @@ def schedule_view(request):
         })
 
     # Хэвлэх хэсэг
-    for i, sch in enumerate(schedules[:3], 1):
-        print(f"--- Хуваарь {i} ---")
-        for d, t, r, c in sch:
-            group_list_str = [f"{hut} ({grp})" for hut, grp in c['group_list']]
-            print(
-                f"{d} {t} | {c['name']} ({c['lesson_type']}) | өрөө {r['id']['id']} | багш {c['teacher']} | анги {group_list_str}")
-        print()
+    # for i, sch in enumerate(schedules[:3], 1):
+    #     print(f"--- Хуваарь {i} ---")
+    #     for d, t, r, c in sch:
+    #         group_list_str = [f"{hut} ({grp})" for hut, grp in c['group_list']]
+    #         print(
+    #             f"{d} {t} | {c['name']} ({c['lesson_type']}) | өрөө {r['id']['id']} | багш {c['teacher']} | анги {group_list_str}")
+    #     print()
 
     return JsonResponse(formatted_schedules, safe=False)
 

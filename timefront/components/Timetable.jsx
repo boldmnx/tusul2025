@@ -5,6 +5,29 @@ const Timetable = () => {
   const [data, setData] = useState([]);
   const [openSection, setOpenSection] = useState(null); // "teacher" эсвэл "student" эсвэл null
 
+  const downloadPdf = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/schedule_pdf_view/", {
+        method: "GET", // GET буюу POST
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("PDF татахад алдаа гарлаа");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "student_schedule.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert("PDF татахад алдаа гарлаа");
+    }
+  };
+
   useEffect(() => {
     fetch("http://localhost:8000/", {
       credentials: "include", // cookie session дамжуулна
@@ -102,6 +125,15 @@ const Timetable = () => {
       {openSection === "student" && (
         <div className="mt-4 bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">
           <h2 className="text-xl font-bold mb-4">Оюутны хичээлийн хуваарь</h2>
+
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={downloadPdf}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors"
+            >
+              PDF татах
+            </button>
+          </div>
 
           {/* Table Container */}
           <div className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">

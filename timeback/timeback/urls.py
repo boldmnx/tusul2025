@@ -2,12 +2,13 @@
 from django.contrib import admin
 from django.urls import path
 from timeapp import views, viewsForm
-from timeapp.views import schedule_view
+from timeapp.views import schedule_view, schedule_pdf_view
 from accounts import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', schedule_view, name='schedule'),
+    path('schedule_pdf_view/', schedule_pdf_view, name='schedule_pdf_view'),
     path('service/', viewsForm.checkService, name='scheduleForm'),
     path('user_login/', views.user_login, name='user_login'),
     path('user_logout/', views.user_logout, name='user_logout'),
