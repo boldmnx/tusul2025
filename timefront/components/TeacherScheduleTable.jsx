@@ -4,18 +4,26 @@ import React, { useEffect, useState } from "react";
 const TeacherScheduleTable = () => {
   const [data, setData] = useState([]);
 
+
+  const downloadPDF = (teacher) => {
+    const url = `http://localhost:8000/teacher_schedule_pdf_view/${encodeURIComponent(
+      teacher
+    )}/`;
+    window.open(url, "_blank"); // Шууд татна
+  };
+
   useEffect(() => {
-    fetch("http://localhost:8000/", {
+    fetch("http://localhost:8000/teacher_schedule/", {
       credentials: "include",
     })
       .then((res) => res.json())
       .then((resData) => {
-        // Жишээ: resData[0].entries гэж ирж байна гэж үзье
         setData(resData[0].entries);
       })
       .catch((err) => console.error(err));
   }, []);
 
+  // LOADING UI
   if (!data.length)
     return (
       <div className="flex justify-center items-center h-64">
@@ -26,7 +34,6 @@ const TeacherScheduleTable = () => {
       </div>
     );
 
-  // Өдөрийг монголд хөрвүүлэх
   const dayMap = {
     Mon: "Даваа",
     Tue: "Мягмар",
@@ -35,18 +42,19 @@ const TeacherScheduleTable = () => {
     Fri: "Баасан",
   };
 
-  // Хичээлүүдийг багшаар бүлэглэх
-  const teacherLessons = data.map((entry) =>
-    entry.groups.map((group) => ({
-      teacher: entry.teacher,
-      day: dayMap[entry.day] || entry.day,
-      time: entry.time,
-      subject: entry.course_name,
-      type: entry.lesson_type,
-      room: entry.room,
-      group: group,
-    }))
-  ).flat();
+  const teacherLessons = data
+    .map((entry) =>
+      entry.groups.map((group) => ({
+        teacher: entry.teacher,
+        day: dayMap[entry.day] || entry.day,
+        time: entry.time,
+        subject: entry.course_name,
+        type: entry.lesson_type,
+        room: entry.room,
+        group: group,
+      }))
+    )
+    .flat();
 
   const groupedByTeacher = teacherLessons.reduce((acc, lesson) => {
     if (!acc[lesson.teacher]) acc[lesson.teacher] = [];
@@ -54,7 +62,6 @@ const TeacherScheduleTable = () => {
     return acc;
   }, {});
 
-  // Хичээлийн төрөл өнгөөр ялгах
   const typeColor = {
     лекц: "bg-blue-50 border-blue-200 text-blue-900",
     лаб: "bg-emerald-50 border-emerald-200 text-emerald-900",
@@ -75,18 +82,36 @@ const TeacherScheduleTable = () => {
             <th className="border p-2">Бүлэг</th>
           </tr>
         </thead>
+
         <tbody>
           {Object.entries(groupedByTeacher).map(([teacher, lessons]) =>
             lessons.map((lesson, idx) => (
               <tr key={`${teacher}-${idx}`} className="hover:bg-slate-50">
                 {idx === 0 && (
-                  <td rowSpan={lessons.length} className="border p-2 font-bold bg-slate-50">
-                    {teacher}
+                  <td
+                    rowSpan={lessons.length}
+                    className="border p-2 font-bold bg-slate-50"
+                  >
+                    <div className="flex flex-col gap-2 items-start">
+                      <span>{teacher}</span>
+
+                      <button
+                        onClick={() => downloadPDF(teacher)}
+                        className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                      >
+                        PDF татах
+                      </button>
+                    </div>
                   </td>
                 )}
+
                 <td className="border p-2">{lesson.day}</td>
                 <td className="border p-2">{lesson.time}</td>
-                <td className={`border p-2 font-bold ${typeColor[lesson.type.toLowerCase()] || ""}`}>
+                <td
+                  className={`border p-2 font-bold ${
+                    typeColor[lesson.type.toLowerCase()] || ""
+                  }`}
+                >
                   {lesson.subject}
                 </td>
                 <td className="border p-2">{lesson.type}</td>
