@@ -46,8 +46,6 @@ export default function Course() {
     })
       .then((r) => r.json())
       .then((d) => {
-        console.log(`######course${JSON.stringify(d)}`);
-
         setCourses(d.data);
       });
 
@@ -97,21 +95,7 @@ export default function Course() {
   const saveCourse = (e) => {
     e.preventDefault();
     const action = editId ? "updateCourse" : "addCourse";
-    console.log(
-      JSON.stringify(
-        {
-          action,
-          id: editId,
-          name,
-          teacher: teacherId,
-          lesson_type: lessonType,
-          available_room_types: roomTypes,
-          group_list: selectedGroups,
-        },
-        null,
-        2
-      )
-    );
+    
 
     fetch("http://localhost:8000/service/", {
       method: "POST",
@@ -139,7 +123,6 @@ export default function Course() {
       })
       .then((data) => {
         console.log(`######${JSON.stringify(data)}`);
-
       });
   };
 
@@ -210,6 +193,17 @@ export default function Course() {
                   {t.name}
                 </option>
               ))}
+            </select>
+            <select
+              className="w-full bg-slate-50 border-none p-4 rounded-2xl"
+              value={lessonType}
+              onChange={(e) => setLessonType(e.target.value)}
+              required
+            >
+              <option value="">Хичээлийн төрөл сонгох</option>
+              <option value="лекц">лекц</option>
+              <option value="лаб">лаб</option>
+              <option value="семинар">Семинар</option>
             </select>
 
             <div className="space-y-2">

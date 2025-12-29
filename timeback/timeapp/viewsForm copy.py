@@ -13,48 +13,85 @@ def addTeacher(request, data):
         name = data.get("name")
         if not name:
             return sendResponse(4009)
-        obj = Teacher.objects.create(name=name, user=request.user)
-        return sendResponse(200, {"id": obj.id})
+
+        t = Teacher.objects.create(
+            name=name,
+            ovog=data.get("ovog", ""),
+            age=data.get("age") or None,
+            email=data.get("email", ""),
+            phone=data.get("phone", ""),
+            user=request.user,
+        )
+
+        # Photo
+        if "photo" in request.FILES:
+            t.photo = request.FILES["photo"]
+            t.save()
+
+        return sendResponse(200, {"id": t.id})
     except Exception as e:
-        print("TEACHER ADD:", e)
+        print("TEACHER ADD ERROR:", e)
         return sendResponse(5001)
+
+# List
 
 
 def listTeacher(request, data):
     try:
-        data_list = list(Teacher.objects.filter(
-            user=request.user).values("id", "name"))
-        return sendResponse(200, data_list)
+        teachers = Teacher.objects.filter(user=request.user).values(
+            "id", "name", "ovog", "age", "email", "phone", "photo"
+        )
+        data = []
+        for t in teachers:
+            if t["photo"]:
+                t["photo_url"] = request.build_absolute_uri(
+                    '/media/' + str(t["photo"]))
+            else:
+                t["photo_url"] = None
+
+            data.append(t)
+        return JsonResponse(sendResponse(200, data))
     except Exception as e:
-        print("TEACHER LIST:", e)
-        return sendResponse(5001)
+        print("TEACHER LIST ERROR:", e)
+        return JsonResponse(sendResponse(5001))
 
 
 def updateTeacher(request, data):
     try:
-        tid = data.get("id")
-        name = data.get("name")
-        if not tid or not name:
-            return sendResponse(4009)
-        t = Teacher.objects.filter(id=tid).first()
+        tid = request.POST.get("id")
+        if not tid:
+            return JsonResponse(sendResponse(4009))
+
+        t = Teacher.objects.filter(id=tid, user=request.user).first()
         if not t:
-            return sendResponse(4004)
-        t.name = name
+            return JsonResponse(sendResponse(4004))
+
+        t.name = data.get("name", t.name) or t.name
+        t.ovog = data.get("ovog", t.ovog) or ""
+        t.email = data.get("email", t.email) or ""
+        t.phone = data.get("phone", t.phone) or ""
+        age = data.get("age")
+        if age is None or age in ("", "null"):
+            t.age = t.age  # хуучин утгаа хадгална
+        else:
+            t.age = int(age)
         t.save()
-        return sendResponse(200)
+        return JsonResponse(sendResponse(200))
     except Exception as e:
-        print("TEACHER UPDATE:", e)
-        return sendResponse(5001)
+        print("TEACHER UPDATE ERROR:", e)
+        return JsonResponse(sendResponse(5001))
+
+# Delete
 
 
 def deleteTeacher(request, data):
     try:
-        tid = data.get("id")
-        Teacher.objects.filter(id=tid).delete()
-        return sendResponse(200)
-    except:
-        return sendResponse(5001)
-
+        tid = request.POST.get("id")
+        Teacher.objects.filter(id=tid, user=request.user).delete()
+        return JsonResponse(sendResponse(200))
+    except Exception as e:
+        print("TEACHER DELETE ERROR:", e)
+        return JsonResponse(sendResponse(5001))
 # ---------------- Room ----------------
 
 
@@ -192,6 +229,7 @@ def deleteClassGroup(request, data):
 
 
 def addCourse(request, data):
+    print(f"###########")
     try:
         name = data.get("name")
         teacher_id = data.get("teacher_id")
@@ -266,21 +304,24 @@ def deleteCourse(request, data):
 
 @csrf_exempt
 @login_required
-
 def checkService(request):
+
     if request.method == "OPTIONS":
-        return JsonResponse({"success": True})
+        return JsonResponse({"ok": True})
 
     if request.method != "POST":
-        return JsonResponse(sendResponse(4001))
-    try:
-        data = json.loads(request.body)
-    except:
-        return JsonResponse(sendResponse(4001))
-    if "action" not in data:
-        return JsonResponse(sendResponse(4002))
+        return JsonResponse(sendResponse(4003))
 
-    action = data["action"]
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body)
+        else:
+            data = request.POST.dict()
+    except:
+        data = {}
+
+    action = data.get("action")
+
     actions = {
         "addRoom": addRoom,
         "listRoom": listRoom,
@@ -302,8 +343,10 @@ def checkService(request):
         "updateCourse": updateCourse,
         "deleteCourse": deleteCourse,
     }
-
     if action in actions:
         result = actions[action](request, data)
-        return JsonResponse(result)
+        # JSON response-ийг шалгаж, хэрвээ sendResponse буцаасан бол
+        if isinstance(result, dict):
+            return JsonResponse(result)
+        return result
     return JsonResponse(sendResponse(4003))

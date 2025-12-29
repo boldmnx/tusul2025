@@ -112,7 +112,7 @@ def addRoom(request, data):
         if not room_type or not room_numbers:
             return sendResponse(4009)
 
-        r = Room.objects.filter(room_type=room_type).first()
+        r = Room.objects.filter(user=request.user, room_type=room_type).first()
 
         if r:
             # Давхардуулж нэмэхээс сэргийлэх
@@ -138,10 +138,12 @@ def updateRoom(request, data):
         rid = data.get("id")
         room_type = data.get("room_type")
         room_numbers = data.get("room_number")  # React-аас массив ирнэ
+
+
         if not rid or not room_type or not room_numbers:
             return sendResponse(4009)
 
-        r = Room.objects.filter(id=rid).first()
+        r = Room.objects.filter(id=rid, user=request.user).first()  # зөвхөн өөрийн Room-г засах
         if not r:
             return sendResponse(4004)
 
@@ -229,7 +231,6 @@ def deleteClassGroup(request, data):
 
 
 def addCourse(request, data):
-    print(f"###########")
     try:
         name = data.get("name")
         teacher_id = data.get("teacher_id")
