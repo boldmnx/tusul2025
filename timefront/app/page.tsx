@@ -34,7 +34,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto py-16 px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* 1. Хичээлийн хуваарь руу үсрэх */}
-          <Link href="page.tsx" className="block group">
+          <Link href="/huviar" className="block group">
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:border-blue-200 transition-all duration-300 hover:-translate-y-2 h-full">
               <div className="text-4xl mb-6 bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">
                 📚
@@ -52,7 +52,7 @@ export default function Home() {
           </Link>
 
           {/* 2. Багш нарын бүртгэл рүү үсрэх */}
-          <Link href="/bagsh" className="block group">
+          <Link href="/form/bagsh" className="block group">
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-2 h-full">
               <div className="text-4xl mb-6 bg-emerald-50 w-16 h-16 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">
                 👥
@@ -70,7 +70,7 @@ export default function Home() {
           </Link>
 
           {/* 3. Сертификат эсвэл бусад хэсэг */}
-          <Link href="/certificate" className="block group">
+          <Link href="/" className="block group">
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-2xl hover:border-amber-200 transition-all duration-300 hover:-translate-y-2 h-full">
               <div className="text-4xl mb-6 bg-amber-50 w-16 h-16 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">
                 🏆

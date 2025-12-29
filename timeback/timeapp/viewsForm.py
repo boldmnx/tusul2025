@@ -56,6 +56,30 @@ def listTeacher(request, data):
         return JsonResponse(sendResponse(5001))
 
 
+# def updateTeacher(request, data):
+#     try:
+#         tid = request.POST.get("id")
+#         if not tid:
+#             return JsonResponse(sendResponse(4009))
+
+#         t = Teacher.objects.filter(id=tid, user=request.user).first()
+#         if not t:
+#             return JsonResponse(sendResponse(4004))
+
+#         t.name = data.get("name", t.name) or t.name
+#         t.ovog = data.get("ovog", t.ovog) or ""
+#         t.email = data.get("email", t.email) or ""
+#         t.phone = data.get("phone", t.phone) or ""
+#         age = data.get("age")
+#         if age is None or age in ("", "null"):
+#             t.age = t.age  # хуучин утгаа хадгална
+#         else:
+#             t.age = int(age)
+#         t.save()
+#         return JsonResponse(sendResponse(200))
+#     except Exception as e:
+#         print("TEACHER UPDATE ERROR:", e)
+#         return JsonResponse(sendResponse(5001))
 def updateTeacher(request, data):
     try:
         tid = request.POST.get("id")
@@ -75,6 +99,11 @@ def updateTeacher(request, data):
             t.age = t.age  # хуучин утгаа хадгална
         else:
             t.age = int(age)
+
+        # 📸 Photo update
+        if "photo" in request.FILES:
+            t.photo = request.FILES["photo"]
+
         t.save()
         return JsonResponse(sendResponse(200))
     except Exception as e:
@@ -137,24 +166,21 @@ def updateRoom(request, data):
     try:
         rid = data.get("id")
         room_type = data.get("room_type")
-        room_numbers = data.get("room_number")  # React-аас массив ирнэ
-
+        # React-аас ирж байгаа массив [{id: "101"}, ...]
+        room_numbers = data.get("room_number")
 
         if not rid or not room_type or not room_numbers:
             return sendResponse(4009)
 
-        r = Room.objects.filter(id=rid, user=request.user).first()  # зөвхөн өөрийн Room-г засах
+        # зөвхөн өөрийн Room-г засах
+        r = Room.objects.filter(id=rid, user=request.user).first()
         if not r:
             return sendResponse(4004)
 
         r.room_type = room_type
 
-        # Давхардуулалгүй шинэ жагсаалт
-        existing = r.room_number or []
-        for n in room_numbers:
-            if n not in existing:
-                existing.append(n)
-        r.room_number = existing
+        # Шинэ array-г шууд set хийх
+        r.room_number = room_numbers
         r.save()
 
         return sendResponse(200)
@@ -257,7 +283,10 @@ def listCourse(request, data):
                 "id": c.id,
                 "name": c.name,
                 "lesson_type": c.lesson_type,
-                "teacher": c.teacher.name,
+                "teacher": {
+                    "id": c.teacher.id,
+                    "name": c.teacher.name
+                },
                 "available_room_types": c.available_room_types,
                 "groups": list(c.group_list.values("id", "group_name"))
             })

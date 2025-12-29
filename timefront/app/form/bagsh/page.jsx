@@ -121,9 +121,6 @@ export default function Bagsh() {
     if (formData.photo) {
       fd.append("photo", formData.photo);
     }
-    for (let pair of fd.entries()) {
-      console.log(pair[0] + ": ", pair[1]);
-    }
     fetch("http://localhost:8000/service/", {
       method: "POST",
       body: fd, // ❗️ FormData → headers байхгүй!
@@ -297,7 +294,7 @@ export default function Bagsh() {
                 <input
                   placeholder="Овог"
                   className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                  value={formData.ovog}
+                  value={formData.ovog?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, ovog: e.target.value })
                   }
@@ -305,7 +302,7 @@ export default function Bagsh() {
                 <input
                   placeholder="Нэр"
                   className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                  value={formData.name}
+                  value={formData.name?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
@@ -332,7 +329,8 @@ export default function Bagsh() {
                     placeholder="Нас"
                     type="number"
                     className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                    value={formData.age}
+                    value={formData.age ?? ""} 
+
                     onChange={(e) =>
                       setFormData({ ...formData, age: e.target.value })
                     }
@@ -413,6 +411,7 @@ export default function Bagsh() {
                     </span>
                     <span className="font-bold text-slate-700 text-lg">
                       {selectedTeacher.age || "??"}
+
                     </span>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl">

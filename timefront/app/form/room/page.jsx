@@ -68,18 +68,6 @@ export default function Room() {
       .filter((n) => n)
       .map((n) => ({ id: n }));
 
-    console.log(
-      JSON.stringify(
-        {
-          action,
-          id: editId,
-          room_type: roomType,
-          room_number: numbersArray,
-        },
-        null,
-        2
-      )
-    );
     fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

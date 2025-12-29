@@ -95,7 +95,6 @@ export default function Course() {
   const saveCourse = (e) => {
     e.preventDefault();
     const action = editId ? "updateCourse" : "addCourse";
-    
 
     fetch("http://localhost:8000/service/", {
       method: "POST",
@@ -121,9 +120,6 @@ export default function Course() {
         setEditId(null);
         getData();
       })
-      .then((data) => {
-        console.log(`######${JSON.stringify(data)}`);
-      });
   };
 
   const deleteCourse = (id) => {
@@ -284,37 +280,45 @@ export default function Course() {
                     <td className="p-5">
                       <div className="font-bold text-slate-700">{c.name}</div>
                       <div className="flex gap-1 mt-1">
-                        {c.available_room_types.map((rt) => (
                           <span
-                            key={rt}
                             className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 uppercase font-bold"
                           >
-                            {rt}
+                            {c.lesson_type}
                           </span>
-                        ))}
                       </div>
                     </td>
-                    <td className="p-5 text-sm text-slate-600 font-medium">
+                    {/* <td className="p-5 text-sm text-slate-600 font-medium">
                       {c.teacher_name || c.teacher}
+                    </td> */}
+                    <td className="p-5 text-sm text-slate-600 font-medium">
+                      {c.teacher?.name || c.teacher_name || ""}
                     </td>
+
                     <td className="p-5 text-center">
                       <span className="bg-violet-100 text-violet-700 px-2.5 py-1 rounded-lg text-xs font-black">
-                        {c.group_list?.length || 0}
+                        {c.groups?.length || 0}
                       </span>
                     </td>
                     <td className="p-5 text-right space-x-1">
                       <button
                         onClick={() => {
                           setEditId(c.id);
-                          setName(c.name);
-                          setTeacherId(c.teacher_id);
-                          setRoomTypes(c.available_room_types);
-                          setSelectedGroups(c.group_list.map((g) => g.id));
+                          setName(c.name || "");
+                          setLessonType(c.lesson_type || "");
+
+                          setTeacherId(c.teacher?.id || "");
+
+                          setRoomTypes(c.available_room_types || []);
+
+                          // groups массивыг зөв тодорхойлох
+                          const groupsIds = c.groups?.map((g) => g.id) || [];
+                          setSelectedGroups(groupsIds);
                         }}
                         className="p-2 text-slate-400 hover:text-violet-600"
                       >
                         ✏️
                       </button>
+
                       <button
                         onClick={() => deleteCourse(c.id)}
                         className="p-2 text-slate-400 hover:text-red-500"
