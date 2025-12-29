@@ -4,6 +4,8 @@ from django.urls import path
 from timeapp import views, viewsForm
 from timeapp.views import schedule_view, schedule_pdf_view, teacher_schedule, teacher_schedule_pdf_view
 from accounts import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,4 +19,4 @@ urlpatterns = [
     path('user_logout/', views.user_logout, name='user_logout'),
     path('user_register/', views.user_register, name='user_register'),
     path("api/current_user/", views.current_user, name="current_user"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

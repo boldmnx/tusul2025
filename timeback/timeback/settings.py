@@ -34,14 +34,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
-# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-# CORS_ALLOW_ALL_ORIGINS = True
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
 
 
 ROOT_URLCONF = 'timeback.urls'
@@ -87,6 +90,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'  # эсвэл os.path.join(BASE_DIR, 'media')
+
+# LOGIN_URL = '/user_login/'
+LOGIN_URL = '/auth/login/'
+
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -106,9 +117,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = False  # development-д
+# SESSION_COOKIE_SAMESITE = 'Lax'
+# SESSION_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SECURE = False  # development-д
 
 
 def sendResponse(statusCode, data=[], action=None):

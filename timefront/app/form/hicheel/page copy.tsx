@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 
 export default function Course() {
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false); // session баталгаажсан эсэх
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [groups, setGroups] = useState([]);
-
   const [name, setName] = useState("");
   const [teacherId, setTeacherId] = useState("");
   const [lessonType, setLessonType] = useState("");
@@ -16,36 +19,61 @@ export default function Course() {
 
   const MULTI_ROOM = ["лекц", "лаб", "семинар"];
 
+  // 1️⃣ Session шалгах
+  useEffect(() => {
+    let isMounted = true;
+    fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
+      .then(res => {
+        if (res.status === 200) return res.json();
+        throw new Error("Not authenticated");
+      })
+      .then(() => {
+        if (isMounted) setAuthChecked(true);
+      })
+      .catch(() => {
+        if (isMounted) router.replace("/auth/signin");
+      });
+
+    return () => { isMounted = false };
+  }, [router]);
+
+  // 2️⃣ API өгөгдлийг авах
   const getData = () => {
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "listCourse" }),
+      credentials: "include",
     })
-      .then((r) => r.json())
-      .then((d) => setCourses(d.data));
+      .then(r => r.json())
+      .then(d => setCourses(d.data));
 
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "listTeacher" }),
+      credentials: "include",
     })
-      .then((r) => r.json())
-      .then((d) => setTeachers(d.data));
+      .then(r => r.json())
+      .then(d => setTeachers(d.data));
 
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "listGroup" }),
+      credentials: "include",
     })
-      .then((r) => r.json())
-      .then((d) => setGroups(d.data));
+      .then(r => r.json())
+      .then(d => setGroups(d.data));
   };
 
+  // 3️⃣ Auth баталгаажаад л data авах
   useEffect(() => {
-    getData();
-  }, []);
+    if (authChecked) getData();
+  }, [authChecked]);
 
+
+  
   const toggleRoomType = (rt) => {
     setRoomTypes(roomTypes.includes(rt) ? roomTypes.filter((x) => x !== rt) : [...roomTypes, rt]);
   };
@@ -57,7 +85,7 @@ export default function Course() {
   const saveCourse = (e) => {
     e.preventDefault();
     const action = editId ? "updateCourse" : "addCourse";
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -72,13 +100,24 @@ export default function Course() {
 
   const deleteCourse = (id) => {
     if(confirm("Устгахдаа итгэлтэй байна уу?")) {
-      fetch("http://127.0.0.1:8000/service/", {
+      fetch("http://localhost:8000/service/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "deleteCourse", id }),
       }).then(() => getData());
     }
   };
+
+  // 4️⃣ Auth баталгаажаагүй үед loading
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-violet-600 font-bold text-lg animate-pulse">
+          Session шалгаж байна...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in duration-700">
@@ -189,4 +228,5 @@ export default function Course() {
       </div>
     </div>
   );
+
 }

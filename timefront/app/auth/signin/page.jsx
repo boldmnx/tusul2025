@@ -31,7 +31,7 @@ const SignIn = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: "include", // session cookie ашиглах бол
+        credentials: "include", 
       });
 
       const data = await res.json();

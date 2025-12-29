@@ -19,7 +19,6 @@ export default function ClassGroup() {
 
     fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
       .then((res) => {
-        console.log(`#####${JSON.stringify(res)}`);
         if (res.status === 200) {
           return res.json();
         }
@@ -39,14 +38,14 @@ export default function ClassGroup() {
 
   // 2️⃣ Ангиудыг авах
   const getGroups = () => {
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "listClassGroup" }),
       credentials: "include",
     })
       .then((r) => r.json())
-      .then((d) => setGroups(d.data));
+      .then((d) => setGroups(Array.isArray(d.data) ? d.data : []));
   };
 
   // 3️⃣ Auth баталгаажаад л data fetch хийх
@@ -70,7 +69,7 @@ export default function ClassGroup() {
     e.preventDefault();
     const action = editId ? "updateClassGroup" : "addClassGroup";
 
-    fetch("http://127.0.0.1:8000/service/", {
+    fetch("http://localhost:8000/service/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -92,7 +91,7 @@ export default function ClassGroup() {
 
   const deleteGroup = (id) => {
     if (confirm("Та энэ ангийг устгахдаа итгэлтэй байна уу?")) {
-      fetch("http://127.0.0.1:8000/service/", {
+      fetch("http://localhost:8000/service/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "deleteClassGroup", id }),

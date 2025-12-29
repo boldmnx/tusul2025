@@ -1,15 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=2)  # Хэн үүсгэсэн
+    ovog = models.CharField(max_length=50, blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    photo = models.ImageField(upload_to="teachers/", blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)  # Хэн үүсгэсэн
 
     def __str__(self):
-        return self.name
+        return f"{self.ovog} {self.name}"
 
+    @property
+    def photo_url(self):
+        if self.photo:
+            return self.photo.url
+        return None
 
 class Room(models.Model):
     ROOM_TYPES = [

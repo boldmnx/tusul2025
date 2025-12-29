@@ -13,6 +13,12 @@ from django.contrib.auth.decorators import login_required
 
 @csrf_exempt
 def user_login(request):
+    if request.method == 'GET':
+        return JsonResponse({"message": "Login endpoint. Use POST."})
+
+    if request.method == 'OPTIONS':
+        return JsonResponse({"ok": True, "message": "Preflight OK"})
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -80,7 +86,8 @@ def user_register(request):
         if user_form.is_valid() and account_form.is_valid():
             user = user_form.save(commit=False)
             # user.username = uuid.uuid4().hex[:30]
-            user.username = user_form.cleaned_data['email']  # email-г username болгож хадгалах
+            # email-г username болгож хадгалах
+            user.username = user_form.cleaned_data['email']
 
             user.set_password(user_form.cleaned_data['password'])
             user.save()
