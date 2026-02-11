@@ -9,24 +9,6 @@ const Timetable = () => {
   const [loading, setLoading] = useState(true); // auth болон data ачааллаж байна
   const router = useRouter();
 
-  // useEffect(() => {
-  //   let isMounted = true;
-  //   fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
-  //     .then((res) => {
-  //       if (res.status === 200) return res.json();
-  //       throw new Error("Not authenticated");
-  //     })
-  //     .then(() => {
-  //       if (isMounted) setAuthChecked(true);
-  //     })
-  //     .catch(() => {
-  //       if (isMounted) router.replace("/auth/signin");
-  //     });
-
-  //   return () => {
-  //     isMounted = false;
-  //   };
-  // }, [router]);
 
   useEffect(() => {
     // Хэрэглэгч auth эсэхийг backend-аас шалгах
@@ -108,7 +90,7 @@ const Timetable = () => {
   if (data === null) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-slate-500 font-medium">Хуваарь олдсонгүй.</p>
+        <p className="text-slate-500 font-medium">Давхцал гарлаа эсвэл бүх slot дүүрсэн байна. Шинэ цаг нэмнэ үү!</p>
       </div>
     );
   }

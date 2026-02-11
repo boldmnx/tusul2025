@@ -19,7 +19,8 @@ DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri',]
 #          '13:20-14:50', '15:00-16:30', '16:40-18:10']
 
 TIMES = ['09:40-11:10', '11:20-12:50',
-         '13:20-14:50', '15:00-16:30', ]
+         '13:20-14:50', '15:00-16:30',]
+
 
 teacher_days_off = {
     "П.Зоригтбаатар": ["Mon"],
@@ -28,84 +29,29 @@ teacher_days_off = {
     "Х.Сувд-Эрдэнэ": ["Thu"],
     "Б.Цэнд-Аюуш": ["Fri"],
 }
-
 def is_conflict(schedule, new):
     nd, nt, nr, course = new
     teacher = course["teacher"]
     groups = set(course["group_list"])
+    lesson_type = course["lesson_type"]
 
     for (d, t, r, c) in schedule:
         if d == nd and t == nt:
+
+            # ❗ Багш давхцах бол ямар ч үед болохгүй
             if c["teacher"] == teacher:
                 return True
+
+            # ❗ Өрөө давхцах бол ямар ч үед болохгүй
             if r["id"] == nr["id"]:
                 return True
-            if groups & set(c["group_list"]):
-                return True
+
+            # 🔴 Group давхцлыг ЗӨВХӨН лекц БИШ үед шалгана
+            if lesson_type != "лекц":
+                if groups & set(c["group_list"]):
+                    return True
+
     return False
-
-
-def build_course_blocks(courses):
-    blocks = []
-    used_ids = set()
-
-    lecture_map = defaultdict(list)
-    for c in courses:
-        if c.get("parent_lecture"):
-            lecture_map[c["parent_lecture"]].append(c)
-
-    for lec in courses:
-        if lec["lesson_type"] == "лекц":
-            block = [lec]
-
-            children = lecture_map.get(lec["id"], [])
-            sems = [c for c in children if c["lesson_type"] == "семинар"]
-            labs = [c for c in children if c["lesson_type"] == "лаб"]
-
-            block.extend(sems)
-            block.extend(labs)
-
-            blocks.append(block)
-            used_ids.update(c["id"] for c in block)
-
-    # Lecture-гүй block (нэр ижил)
-    name_map = defaultdict(list)
-    for c in courses:
-        if c["id"] not in used_ids:
-            name_map[c["name"]].append(c)
-
-    for items in name_map.values():
-        items.sort(key=lambda x: {"лекц": 0, "семинар": 1, "лаб": 2, "практик": 3}[
-                   x["lesson_type"]])
-        blocks.append(items)
-
-    return blocks
-
-
-def block_priority(block):
-    """
-    Lecture-тэй block → 0
-    Lecture-гүй block → 1
-    """
-    for c in block:
-        if c["lesson_type"] == "лекц":
-            return 0
-    return 1
-
-
-def find_available_slot(schedule, course, all_slots, room_map, teacher_days_off):
-    """
-    Давхцалгүйгээр орох боломжтой slot хайна.
-    Хэрвээ олдвол (day, time, room) буцаана, олдохгүй бол None.
-    """
-    for day, time in all_slots:
-        if course["teacher"] in teacher_days_off and day in teacher_days_off[course["teacher"]]:
-            continue
-        for r in room_map[course["lesson_type"]]:
-            entry = (day, time, r, course)
-            if not is_conflict(schedule, entry):
-                return entry
-    return None
 
 
 def generate_schedules(courses, num_schedules=1):
@@ -274,7 +220,71 @@ def generate_schedules(courses, num_schedules=1):
     return schedules
 
 
+def build_course_blocks(courses):
+    blocks = []
+    used_ids = set()
+
+    lecture_map = defaultdict(list)
+    for c in courses:
+        if c.get("parent_lecture"):
+            lecture_map[c["parent_lecture"]].append(c)
+
+    for lec in courses:
+        if lec["lesson_type"] == "лекц":
+            block = [lec]
+
+            children = lecture_map.get(lec["id"], [])
+            sems = [c for c in children if c["lesson_type"] == "семинар"]
+            labs = [c for c in children if c["lesson_type"] == "лаб"]
+
+            block.extend(sems)
+            block.extend(labs)
+
+            blocks.append(block)
+            used_ids.update(c["id"] for c in block)
+
+    # Lecture-гүй block (нэр ижил)
+    name_map = defaultdict(list)
+    for c in courses:
+        if c["id"] not in used_ids:
+            name_map[c["name"]].append(c)
+
+    for items in name_map.values():
+        items.sort(key=lambda x: {"лекц": 0, "семинар": 1, "лаб": 2, "практик": 3}[
+                   x["lesson_type"]])
+        blocks.append(items)
+
+    return blocks
+
+
+def block_priority(block):
+    """
+    Lecture-тэй block → 0
+    Lecture-гүй block → 1
+    """
+    for c in block:
+        if c["lesson_type"] == "лекц":
+            return 0
+    return 1
+
+
+def find_available_slot(schedule, course, all_slots, room_map, teacher_days_off):
+    """
+    Давхцалгүйгээр орох боломжтой slot хайна.
+    Хэрвээ олдвол (day, time, room) буцаана, олдохгүй бол None.
+    """
+    for day, time in all_slots:
+        if course["teacher"] in teacher_days_off and day in teacher_days_off[course["teacher"]]:
+            continue
+        for r in room_map[course["lesson_type"]]:
+            entry = (day, time, r, course)
+            if not is_conflict(schedule, entry):
+                return entry
+    return None
+
+
 def get_formatted_schedules(user):
+    from collections import defaultdict
 
     data = Course.objects.filter(user=user).select_related(
         "teacher").prefetch_related("group_list")
@@ -284,7 +294,6 @@ def get_formatted_schedules(user):
         lambda: {'available_room_types': None, 'group_list': []})
 
     for item in data:
-        lec_id = item.id
         group_names = list(item.group_list.values_list(
             "hutulbur", "group_name"))
         if item.lesson_type == 'лекц':
@@ -300,7 +309,6 @@ def get_formatted_schedules(user):
                 'available_room_types': item.available_room_types,
                 'group_list': group_names,
                 'parent_lecture': item.parent_lecture_id,
-                # default = 1
                 'slots_per_week': getattr(item, 'slots_per_week', 1)
             })
 
@@ -308,16 +316,11 @@ def get_formatted_schedules(user):
         all_groups = []
         for gl in values['group_list']:
             all_groups.extend(gl)
-
-        # Lecture item-ийг олох
         lec_item = next((i for i in data if i.name == name and i.teacher.name ==
                         teacher and i.lesson_type == 'лекц'), None)
         if lec_item:
-            lec_id = lec_item.id
-
-            # Lecture-г course_list-д нэмэх
             course_list.insert(0, {
-                'id': lec_id,
+                'id': lec_item.id,
                 'name': name,
                 'parent_lecture': None,
                 'teacher': teacher,
@@ -325,63 +328,76 @@ def get_formatted_schedules(user):
                 'available_room_types': values['available_room_types'],
                 'group_list': all_groups,
                 'slots_per_week': getattr(lec_item, 'slots_per_week', 1)
-
             })
 
+    # 🔹 Schedule үүсгэх
     schedules = generate_schedules(course_list, num_schedules=10)
-    formatted_schedules = []
 
+    # 🔹 Room map-г нэг удаа бэлдэх
+    room_map = {lt: list(Room.objects.filter(room_type=lt).values("id", "room_number"))
+                for lt in set(c['lesson_type'] for c in course_list)}
+
+    # 🔹 Schedule 1-г авч, бүх ороогүй хичээлийг нэмэх
+    schedule = schedules[0]
+    scheduled_courses = set(c['name'] for _, _, _, c in schedule)
+    unscheduled_courses = [
+        c for c in course_list if c['name'] not in scheduled_courses]
+
+    for course_to_add in unscheduled_courses:
+        suggestion = find_available_slot(schedule, course_to_add,
+                                         [(d, t) for d in DAYS for t in TIMES],
+                                         room_map, teacher_days_off)
+        if suggestion:
+            day, time, room, course = suggestion
+            schedule.append((day, time, room, course))
+            print(
+                f"✅ '{course['name']}' хичээл {day} {time} цагт өрөө {room['id']} -д амжилттай орлоо")
+        else:
+            print(
+                f"❌ '{course_to_add['name']}' хичээлийг оруулах боломжгүй байна")
+
+    # 🔹 Форматласан schedule-г бэлдэх
+    formatted_schedules = []
     for i, sch in enumerate(schedules[:1], 1):
         entries = []
+
         for day, time, room, course in sch:
+            room_id = str(room["id"]) if isinstance(
+                room["id"], (int, str)) else room["id"].get("id", "")
+
             entries.append({
                 "day": day,
                 "time": time,
                 "course_name": course["name"],
                 "lesson_type": course["lesson_type"],
-                "room": room["id"]['id'],
+                "room":  room_id,
                 "teacher": course["teacher"],
                 "groups": [f"{hut} ({grp})" for hut, grp in course["group_list"]]
             })
-        formatted_schedules.append({
-            "schedule_number": i,
-            "entries": entries
-        })
+        formatted_schedules.append({"schedule_number": i, "entries": entries})
 
-    # Хэвлэх хэсэг
-    for i, sch in enumerate(schedules[:1], 1):
-        print(f"--- Хуваарь {i} ---")
-        for d, t, r, c in sch:
-            group_list_str = [f"{hut} ({grp})" for hut, grp in c['group_list']]
-            print(
-                f"{d} {t} | {c['name']} ({c['lesson_type']}) | өрөө {r['id']['id']} | багш {c['teacher']} | анги {group_list_str}")
-        print()
+    # 🔹 Console дээр хэвлэх
+    print(f"--- Хуваарь 1 ---")
+    for day, time, room, course in schedule:
+        group_list_str = [f"{hut} ({grp})" for hut,
+                          grp in course['group_list']]
+        print(
+            f"{day} {time} | {course['name']} ({course['lesson_type']}) | өрөө {room['id']} | багш {course['teacher']} | анги {group_list_str}")
     print(f"--- Нийт боломж {len(schedules)} ---")
+
+    # 🔹 Давхцалгүй course-н мэдээлэл
     unique_course_names = set(c['name'] for c in course_list)
     print(f"📌 Хичээлийн тоо: {len(unique_course_names)}")
-
-    scheduled_courses = set(
-        c['name'] for sch in schedules for _, _, _, c in sch
-    )
-    print(f"✅ Хуваарьт орсон хичээлийн тоо: {len(scheduled_courses)}")
-
+    scheduled_courses = set(c['name'] for _, _, _, c in schedule)
+    print(f"✅ Хувааарт орсон хичээлийн тоо: {len(scheduled_courses)}")
     print(
-        f"❌ Хуваарьт ороогүй хичээлийн тоо, нэр: "
-        f"{len(unique_course_names - scheduled_courses)} — {unique_course_names - scheduled_courses}"
-    )
+        f"❌ Хуваарьт ороогүй хичээлийн тоо, нэр: {len(unique_course_names - scheduled_courses)} — {unique_course_names - scheduled_courses}")
 
-    lecture_courses = set(
-        c['name'] for c in course_list if c.get('lesson_type') == 'лекц'
-    )
-
+    lecture_courses = set(c['name']
+                          for c in course_list if c.get('lesson_type') == 'лекц')
+    scheduled_lectures = set(c['name'] for _, _, _,
+                             c in schedule if c.get('lesson_type') == 'лекц')
     print(f"📘 Нийт лекцийн тоо: {len(lecture_courses)}")
-    scheduled_lectures = set(
-        c['name']
-        for sch in schedules
-        for _, _, _, c in sch
-        if c.get('lesson_type') == 'лекц'
-    )
-
     print(f"✅ Хуваарьт орсон лекцийн тоо: {len(scheduled_lectures)}")
 
     return formatted_schedules
@@ -415,7 +431,7 @@ def teacher_schedule_pdf_view(request, teacher_name):
 
     # Гарчигт багшийн нэр нэмэх
     title = Paragraph(
-        f"{teacher_name} багшийн хуваарь (2026 оны Хаврын улирал)", style_title)
+        f"{teacher_name} багшийн хуваарь (2024-2025 оны Намрын улирал)", style_title)
     elements.append(title)
     elements.append(Spacer(1, 0.5*cm))
 
@@ -497,7 +513,7 @@ def schedule_pdf_view(request):
     elements = []
 
     # Гарчиг нэмэх
-    title = Paragraph("2026 оны Хаврын улирал", style_title)
+    title = Paragraph("2024-2025 оны Намрын улирал", style_title)
     elements.append(title)
     elements.append(Spacer(1, 0.5*cm))
 
