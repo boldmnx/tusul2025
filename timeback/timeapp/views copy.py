@@ -21,23 +21,14 @@ DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri',]
 TIMES = ['09:40-11:10', '11:20-12:50',
          '13:20-14:50', '15:00-16:30', ]
 
-# teacher_days_off = {
-#     "П.Зоригтбаатар": ["Mon"],
-#     "Б.Алтантүлхүүр": ["Tue"],
-#     "Н.Ринчмаа": ["Wed"],
-#     "Х.Сувд-Эрдэнэ": ["Thu"],
-#     "Б.Цэнд-Аюуш": ["Fri"],
-# }
-
 teacher_days_off = {
-    "Зоригтбаатар": ["Mon"],
-    "Алтантүлхүүр": ["Tue"],
-    "Ринчмаа": ["Wed"],
-    "Сувд-Эрдэнэ": ["Thu"],
-    "Цэнд-Аюуш": ["Fri"],
+    "П.Зоригтбаатар": ["Mon"],
+    "Б.Алтантүлхүүр": ["Tue"],
+    "Н.Ринчмаа": ["Wed"],
+    "Х.Сувд-Эрдэнэ": ["Thu"],
+    "Б.Цэнд-Аюуш": ["Fri"],
 }
 
-print(f'>>>>{teacher_days_off}')
 def is_conflict(schedule, new):
     nd, nt, nr, course = new
     teacher = course["teacher"]
@@ -558,44 +549,6 @@ def schedule_pdf_view(request):
 
     return response
 from django.contrib.auth.decorators import login_required
-
-from openpyxl import Workbook
-from django.http import HttpResponse
-
-def schedule_excel_view(request):
-    data = request.session.get('current_schedule')
-
-    if not data or not data[0].get("entries"):
-        return HttpResponse("Хуваарь олдсонгүй", status=404)
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Schedule"
-
-    # Header
-    headers = ["Өдөр", "Цаг", "Хичээл", "Төрөл", "Багш", "Танхим", "Бүлэг"]
-    ws.append(headers)
-
-    # Data
-    for entry in data[0]["entries"]:
-        ws.append([
-            entry["day"],
-            entry["time"],
-            entry["course_name"],
-            entry["lesson_type"],
-            entry["teacher"],
-            entry["room"],
-            ", ".join(entry["groups"]),
-        ])
-
-    # Response
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = 'attachment; filename="schedule.xlsx"'
-
-    wb.save(response)
-    return response
 
 @login_required
 def schedule_view(request):

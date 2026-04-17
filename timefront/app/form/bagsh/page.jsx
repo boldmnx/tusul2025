@@ -62,7 +62,10 @@ export default function Bagsh() {
       credentials: "include",
     })
       .then((res) => res.json())
-      .then((data) => setBagsh(data.data));
+      .then((data) => {
+        console.log("##########", JSON.stringify(data.data, null, 2));
+        setBagsh(data.data);
+      });
   };
 
   useEffect(() => {
@@ -162,6 +165,7 @@ export default function Bagsh() {
     setFormData({
       name: selectedTeacher.name,
       ovog: selectedTeacher.ovog,
+      // name: selectedTeacher.ovog ?? "",
       age: selectedTeacher.age,
       email: selectedTeacher.email,
       phone: selectedTeacher.phone,
@@ -259,7 +263,6 @@ export default function Bagsh() {
         </div>
       </div>
 
-      {/* Баруун тал: Дэлгэрэнгүй мэдээлэл эсвэл Форм */}
       <div className="w-full lg:w-[450px] shrink-0">
         <div className="sticky top-6">
           {isEditing ? (
@@ -293,8 +296,9 @@ export default function Bagsh() {
                 </div>
                 <input
                   placeholder="Овог"
+                  required
                   className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                  value={formData.ovog?? ""}
+                  value={formData.ovog ?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, ovog: e.target.value })
                   }
@@ -302,7 +306,7 @@ export default function Bagsh() {
                 <input
                   placeholder="Нэр"
                   className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                  value={formData.name?? ""}
+                  value={formData.name ?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
@@ -310,6 +314,7 @@ export default function Bagsh() {
                 />
                 <input
                   placeholder="И-мэйл"
+                  required
                   className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
                   value={formData.email}
                   onChange={(e) =>
@@ -319,6 +324,7 @@ export default function Bagsh() {
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     placeholder="Утас"
+                    required
                     className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
                     value={formData.phone}
                     onChange={(e) =>
@@ -326,11 +332,11 @@ export default function Bagsh() {
                     }
                   />
                   <input
+                    required
                     placeholder="Нас"
                     type="number"
                     className="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-bold"
-                    value={formData.age ?? ""} 
-
+                    value={formData.age ?? ""}
                     onChange={(e) =>
                       setFormData({ ...formData, age: e.target.value })
                     }
@@ -411,7 +417,6 @@ export default function Bagsh() {
                     </span>
                     <span className="font-bold text-slate-700 text-lg">
                       {selectedTeacher.age || "??"}
-
                     </span>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl">

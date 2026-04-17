@@ -15,7 +15,9 @@ export default function Course() {
   const [roomTypes, setRoomTypes] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [editId, setEditId] = useState(null);
-
+  const [courseSearch, setCourseSearch] = useState("");
+  const [openCourse, setOpenCourse] = useState(false);
+  const [listCourseId, setListCourseId] = useState("");
   const MULTI_ROOM = ["лекц", "лаб", "семинар"];
 
   useEffect(() => {
@@ -36,7 +38,22 @@ export default function Course() {
       isMounted = false;
     };
   }, [router]);
+  const handleNameChange = (value) => {
+    setName(value);
 
+    if (!value.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const filtered = courses.filter((c) =>
+      c.name.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setSearchResults(filtered);
+    setShowDropdown(true);
+  };
   const getData = () => {
     fetch("http://localhost:8000/service/", {
       method: "POST",
@@ -168,14 +185,55 @@ export default function Course() {
             <h3 className="text-lg font-bold text-slate-700 mb-4">
               {editId ? "Хичээл засах" : "Шинэ хичээл бүртгэх"}
             </h3>
+            <div className="relative">
+              {/* INPUT */}
+              <input
+                className="w-full bg-slate-50 border-none p-4 rounded-2xl"
+                placeholder="Хичээл бичиж хайх..."
+                value={courseSearch}
+                onChange={(e) => {
+                  setCourseSearch(e.target.value);
+                  setOpenCourse(true);
+                }}
+                onFocus={() => setOpenCourse(true)}
+                required
+              />
 
-            <input
-              className="w-full bg-slate-50 border-none p-4 rounded-2xl"
-              placeholder="Хичээлийн нэр"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+              {/* DROPDOWN */}
+              {openCourse && (
+                <div className="absolute z-20 w-full bg-white border mt-2 rounded-2xl shadow-lg max-h-60 overflow-y-auto">
+                  {courses
+                    .filter((c) =>
+                      c.name?.toLowerCase().includes(courseSearch.toLowerCase())
+                    )
+                    .map((c) => (
+                      <div
+                        key={c.id}
+                        className={`p-3 cursor-pointer hover:bg-violet-50 ${
+                          listCourseId === c.id ? "bg-violet-100" : ""
+                        }`}
+                        onClick={() => {
+                          setListCourseId(c.id); // сонгосон course ID
+                          setCourseSearch(c.name); // input дээр нэр харагдана
+                          setOpenCourse(false);
+                          setName(c.name); // form submit-д ашиглана
+                        }}
+                      >
+                        {c.name}
+                      </div>
+                    ))}
+
+                  {/* no result */}
+                  {courses.filter((c) =>
+                    c.name?.toLowerCase().includes(courseSearch.toLowerCase())
+                  ).length === 0 && (
+                    <div className="p-3 text-slate-400 text-sm">
+                      Илэрц олдсонгүй
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <select
               className="w-full bg-slate-50 border-none p-4 rounded-2xl"
@@ -278,7 +336,7 @@ export default function Course() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {courses.map((c,index) => (
+                {courses.map((c, index) => (
                   <tr key={c.id} className="hover:bg-slate-50/50">
                     <td className="p-5 text-sm text-slate-600 font-medium">
                       {index + 1}

@@ -41,6 +41,7 @@ def listTeacher(request, data):
         teachers = Teacher.objects.filter(user=request.user).values(
             "id", "name", "ovog", "age", "email", "phone", "photo"
         )
+
         data = []
         for t in teachers:
             if t["photo"]:
@@ -50,10 +51,12 @@ def listTeacher(request, data):
                 t["photo_url"] = None
 
             data.append(t)
+
         return JsonResponse(sendResponse(200, data))
     except Exception as e:
         print("TEACHER LIST ERROR:", e)
         return JsonResponse(sendResponse(5001))
+
 
 
 # def updateTeacher(request, data):

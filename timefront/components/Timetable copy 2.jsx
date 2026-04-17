@@ -9,29 +9,6 @@ const Timetable = () => {
   const [loading, setLoading] = useState(true); // auth болон data ачааллаж байна
   const router = useRouter();
 
-  const downloadExcel = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/schedule/excel/", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Excel татахад алдаа гарлаа");
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "schedule.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (err) {
-      console.error(err);
-      alert("Excel татахад алдаа гарлаа");
-    }
-  };
 
   useEffect(() => {
     // Хэрэглэгч auth эсэхийг backend-аас шалгах
@@ -113,9 +90,7 @@ const Timetable = () => {
   if (data === null) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-slate-500 font-medium">
-          Давхцал гарлаа эсвэл бүх slot дүүрсэн байна. Шинэ цаг нэмнэ үү!
-        </p>
+        <p className="text-slate-500 font-medium">Давхцал гарлаа эсвэл бүх slot дүүрсэн байна. Шинэ цаг нэмнэ үү!</p>
       </div>
     );
   }
@@ -214,12 +189,7 @@ const Timetable = () => {
             >
               PDF татах
             </button>
-            <button
-              onClick={downloadExcel}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700"
-            >
-              Excel татах
-            </button>
+            <a href="/schedule/excel/">Excel татах</a>
           </div>
 
           {/* Table Container */}
