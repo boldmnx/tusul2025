@@ -7,6 +7,7 @@ export default function Bagsh() {
   const router = useRouter();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
+
   const [bagsh, setBagsh] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -19,7 +20,7 @@ export default function Bagsh() {
     email: "",
     phone: "",
     photo: null,
-    days_off: [],
+    days_off: [], 
   });
 
   /* =====================================================
@@ -120,7 +121,6 @@ export default function Bagsh() {
     fd.append("age", formData.age);
     fd.append("email", formData.email);
     fd.append("phone", formData.phone);
-    fd.append("days_off", JSON.stringify(formData.days_off));
 
     if (formData.photo) {
       fd.append("photo", formData.photo);
@@ -136,8 +136,6 @@ export default function Bagsh() {
         setSelectedTeacher(null);
         setPreview(null);
         getTeachers();
-
-        alert("Амжилттай хадгалагдлаа ✅");
       });
   };
 
@@ -171,7 +169,6 @@ export default function Bagsh() {
       // name: selectedTeacher.ovog ?? "",
       age: selectedTeacher.age,
       email: selectedTeacher.email,
-      days_off: selectedTeacher.days_off || [],
       phone: selectedTeacher.phone,
       photo: null,
     });
@@ -204,7 +201,6 @@ export default function Bagsh() {
                 email: "",
                 phone: "",
                 photo: null,
-                days_off: [],
               });
               setPreview(null);
             }}
@@ -347,32 +343,6 @@ export default function Bagsh() {
                     }
                   />
                 </div>
-
-                <div className="mt-4">
-                  <p className="font-bold text-sm mb-2">Амрах өдрүүд</p>
-
-                  {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => (
-                    <label key={day} className="flex items-center gap-2 mb-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.days_off.includes(day)}
-                        onChange={() => {
-                          setFormData((prev) => {
-                            const exists = prev.days_off.includes(day);
-
-                            return {
-                              ...prev,
-                              days_off: exists
-                                ? prev.days_off.filter((d) => d !== day)
-                                : [...prev.days_off, day],
-                            };
-                          });
-                        }}
-                      />
-                      {day}
-                    </label>
-                  ))}
-                </div>
                 <div className="flex gap-2 pt-4">
                   <button
                     type="button"
@@ -439,32 +409,6 @@ export default function Bagsh() {
                     <span className="font-bold text-slate-700">
                       {selectedTeacher.phone || "---"}
                     </span>
-                  </div>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
-                  <span className="text-xl">📅</span>
-
-                  <div className="flex flex-col w-full">
-                    <span className="text-[10px] font-black text-slate-400 uppercase">
-                      Амрах өдөр
-                    </span>
-
-                    <div className="flex gap-2 flex-wrap mt-1">
-                      {(selectedTeacher.days_off || []).length > 0 ? (
-                        selectedTeacher.days_off.map((day) => (
-                          <span
-                            key={day}
-                            className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold"
-                          >
-                            {day}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="font-bold text-slate-400">
-                          Байхгүй
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

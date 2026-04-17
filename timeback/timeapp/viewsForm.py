@@ -14,12 +14,20 @@ def addTeacher(request, data):
         if not name:
             return sendResponse(4009)
 
+        days_off = data.get("days_off", [])
+        if isinstance(days_off, str):
+            try:
+                days_off = json.loads(days_off)
+            except:
+                days_off = []
+
         t = Teacher.objects.create(
             name=name,
             ovog=data.get("ovog", ""),
             age=data.get("age") or None,
             email=data.get("email", ""),
             phone=data.get("phone", ""),
+            days_off=days_off,
             user=request.user,
         )
 
@@ -39,9 +47,8 @@ def addTeacher(request, data):
 def listTeacher(request, data):
     try:
         teachers = Teacher.objects.filter(user=request.user).values(
-            "id", "name", "ovog", "age", "email", "phone", "photo"
+            "id", "name", "ovog", "age", "email", "phone", "photo", "days_off",
         )
-
         data = []
         for t in teachers:
             if t["photo"]:
@@ -56,7 +63,6 @@ def listTeacher(request, data):
     except Exception as e:
         print("TEACHER LIST ERROR:", e)
         return JsonResponse(sendResponse(5001))
-
 
 
 # def updateTeacher(request, data):
@@ -78,11 +84,18 @@ def listTeacher(request, data):
 #             t.age = t.age  # хуучин утгаа хадгална
 #         else:
 #             t.age = int(age)
+
+#         # 📸 Photo update
+#         if "photo" in request.FILES:
+#             t.photo = request.FILES["photo"]
+
 #         t.save()
 #         return JsonResponse(sendResponse(200))
 #     except Exception as e:
 #         print("TEACHER UPDATE ERROR:", e)
 #         return JsonResponse(sendResponse(5001))
+
+
 def updateTeacher(request, data):
     try:
         tid = request.POST.get("id")
@@ -92,11 +105,22 @@ def updateTeacher(request, data):
         t = Teacher.objects.filter(id=tid, user=request.user).first()
         if not t:
             return JsonResponse(sendResponse(4004))
+        
+        days_off = data.get("days_off")
+        if days_off is not None:
+            if isinstance(days_off, str):
+                try:
+                    days_off = json.loads(days_off)
+                except:
+                    days_off = []
+            t.days_off = days_off
+
 
         t.name = data.get("name", t.name) or t.name
         t.ovog = data.get("ovog", t.ovog) or ""
         t.email = data.get("email", t.email) or ""
         t.phone = data.get("phone", t.phone) or ""
+        
         age = data.get("age")
         if age is None or age in ("", "null"):
             t.age = t.age  # хуучин утгаа хадгална

@@ -30,14 +30,12 @@ TIMES = ['09:40-11:10', '11:20-12:50',
 # }
 
 teacher_days_off = {
-    "Зоригтбаатар": ["Mon"],
-    "Алтантүлхүүр": ["Tue"],
-    "Ринчмаа": ["Wed"],
-    "Сувд-Эрдэнэ": ["Thu"],
-    "Цэнд-Аюуш": ["Fri"],
+    i["name"]: i["days_off"]
+    for i in Teacher.objects.values("name", "days_off")
+    if i["days_off"]  # [] байвал орохгүй
 }
 
-print(f'>>>>{teacher_days_off}')
+
 def is_conflict(schedule, new):
     nd, nt, nr, course = new
     teacher = course["teacher"]
@@ -358,13 +356,15 @@ def get_formatted_schedules(user):
         })
 
     # Хэвлэх хэсэг
-    for i, sch in enumerate(schedules[:1], 1):
-        print(f"--- Хуваарь {i} ---")
-        for d, t, r, c in sch:
-            group_list_str = [f"{hut} ({grp})" for hut, grp in c['group_list']]
-            print(
-                f"{d} {t} | {c['name']} ({c['lesson_type']}) | өрөө {r['id']['id']} | багш {c['teacher']} | анги {group_list_str}")
-        print()
+    # for i, sch in enumerate(schedules[:1], 1):
+    #     print(f"--- Хуваарь {i} ---")
+    #     for d, t, r, c in sch:
+    #         group_list_str = [f"{hut} ({grp})" for hut, grp in c['group_list']]
+    #         print(
+    #             f"{d} {t} | {c['name']} ({c['lesson_type']}) | өрөө {r['id']['id']} | багш {c['teacher']} | анги {group_list_str}")
+    #     print()
+
+
     print(f"--- Нийт боломж {len(schedules)} ---")
     unique_course_names = set(c['name'] for c in course_list)
     print(f"📌 Хичээлийн тоо: {len(unique_course_names)}")
@@ -607,6 +607,6 @@ def schedule_view(request):
 
 
 def teacher_schedule(request):
-    formatted_schedules = request.session.get('current_schedule')
 
+    formatted_schedules = request.session.get('current_schedule')
     return JsonResponse(formatted_schedules, safe=False)
