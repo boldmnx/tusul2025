@@ -2,73 +2,55 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TeacherScheduleTable from "@/components/TeacherScheduleTable";
+import { toPng } from "html-to-image";
 
 const Timetable = () => {
   const [data, setData] = useState([]);
-  const [openSection, setOpenSection] = useState(null); // "teacher" эсвэл "student" эсвэл null
-  const [loading, setLoading] = useState(true); // auth болон data ачааллаж байна
+  const [openSection, setOpenSection] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  const downloadExcel = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/schedule/excel/", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Excel татахад алдаа гарлаа");
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "schedule.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (err) {
-      console.error(err);
-      alert("Excel татахад алдаа гарлаа");
-    }
-  };
-
   useEffect(() => {
-    // Хэрэглэгч auth эсэхийг backend-аас шалгах
     fetch("http://localhost:8000/api/current_user/", { credentials: "include" })
       .then((res) => {
         if (res.status === 401) {
-          // Login хийгээгүй бол redirect
           router.replace("/signin");
-        } else {
-          return res.json();
+          return null;
         }
+        return res.json();
       })
       .then((resData) => {
-        if (resData) {
-          if (!resData.length || !resData[0].entries.length) {
-            setData(null); // дата алга байна
-          } else {
-            setData(resData[0].entries);
-          }
+        if (!resData) return;
+        if (!resData.length || !resData[0].entries.length) {
+          setData(null);
+        } else {
+          setData(resData[0].entries);
         }
       })
-      .catch((err) => {
-        console.error(err);
-        setData(null);
-      })
+      .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [router]);
+
+  // Хуваарийн дата тусдаа fetch
+  useEffect(() => {
+    fetch("http://localhost:8000/", { credentials: "include" })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (!resData.length || !resData[0].entries.length) {
+          setData(null);
+        } else {
+          setData(resData[0].entries);
+        }
+      })
+      .catch(() => setData(null));
+  }, []);
 
   const downloadPdf = async () => {
     try {
       const res = await fetch("http://localhost:8000/schedule_pdf_view/", {
-        method: "GET", // GET буюу POST
+        method: "GET",
         credentials: "include",
       });
-
-      if (!res.ok) throw new Error("PDF татахад алдаа гарлаа");
-
+      if (!res.ok) throw new Error();
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -77,28 +59,54 @@ const Timetable = () => {
       document.body.appendChild(a);
       a.click();
       a.remove();
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("PDF татахад алдаа гарлаа");
     }
   };
-  useEffect(() => {
-    fetch("http://localhost:8000/", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((resData) => {
-        if (!resData.length || !resData[0].entries.length) {
-          setData(null); // дата алга байна гэж тэмдэглэх
-        } else {
-          setData(resData[0].entries);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setData(null);
+
+  const downloadImage = async () => {
+    const element = document.getElementById("student-schedule");
+    if (!element) return;
+
+    const scrollWrapper = element.querySelector(".overflow-x-auto");
+    const table = element.querySelector("table");
+    const fullWidth = table ? table.scrollWidth : element.scrollWidth;
+    const fullHeight = element.scrollHeight;
+
+    const origOverflow = scrollWrapper?.style.overflow;
+    if (scrollWrapper) scrollWrapper.style.overflow = "visible";
+
+    const stickyEls = element.querySelectorAll(".sticky");
+    stickyEls.forEach((el) => {
+      el.dataset.origPos = el.style.position;
+      el.style.position = "static";
+    });
+
+    try {
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        width: fullWidth,
+        height: fullHeight,
+        style: {
+          width: fullWidth + "px",
+          height: fullHeight + "px",
+          overflow: "visible",
+        },
       });
-  }, []);
+      const link = document.createElement("a");
+      link.download = "schedule.png";
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      if (scrollWrapper) scrollWrapper.style.overflow = origOverflow || "";
+      stickyEls.forEach((el) => {
+        el.style.position = el.dataset.origPos || "";
+        delete el.dataset.origPos;
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -120,7 +128,7 @@ const Timetable = () => {
     );
   }
 
-  if (!data.length)
+  if (!data.length) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -129,6 +137,7 @@ const Timetable = () => {
         </p>
       </div>
     );
+  }
 
   const dayMap = {
     Mon: "Даваа",
@@ -138,7 +147,6 @@ const Timetable = () => {
     Fri: "Баасан",
   };
   const orderedDays = ["Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан"];
-
   const groupedByDay = data.reduce((acc, item) => {
     const day = dayMap[item.day] || item.day;
     if (!acc[day]) acc[day] = [];
@@ -160,7 +168,6 @@ const Timetable = () => {
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
-      {/* Page Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">
@@ -206,8 +213,7 @@ const Timetable = () => {
       {openSection === "student" && (
         <div className="mt-4 bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">
           <h2 className="text-xl font-bold mb-4">Оюутны хичээлийн хуваарь</h2>
-
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end gap-2 mb-4">
             <button
               onClick={downloadPdf}
               className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors"
@@ -215,16 +221,22 @@ const Timetable = () => {
               PDF татах
             </button>
             <button
-              onClick={downloadExcel}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700"
+              onClick={downloadImage}
+              className="px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors"
             >
-              Excel татах
+              Зураг татах
             </button>
           </div>
 
-          {/* Table Container */}
-          <div className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+          <div
+            id="student-schedule"
+            style={{ color: "#000", background: "#fff" }}
+            className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden"
+          >
+            <div
+              className="overflow-x-auto custom-scrollbar"
+              id="capture-wrapper"
+            >
               <table className="min-w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-slate-800 text-white">
@@ -292,18 +304,15 @@ const Timetable = () => {
                           <td className="border-r border-slate-200 py-4 px-3 text-center font-bold text-slate-500 bg-white sticky left-[78px] z-10 whitespace-nowrap">
                             {time}
                           </td>
-
                           {groupsList.map((group) => {
                             const lesson = uniqueLessons.find((l) =>
                               l.groups.includes(group)
                             );
-
                             if (lesson && !lesson.rendered) {
                               const startIdx = groupsList.indexOf(group);
                               const consecutiveCount = groupsList
                                 .slice(startIdx)
                                 .reduce((count, g, idx, arr) => {
-                                  // Зөвхөн дараалсан (consecutive) бүлгүүдийг тоолно
                                   if (
                                     lesson.groups.includes(g) &&
                                     (idx === 0 ||
@@ -313,29 +322,27 @@ const Timetable = () => {
                                   }
                                   return count;
                                 }, 0);
-
                               lesson.rendered = true;
                               const isLecture = lesson.lesson_type
                                 ?.toLowerCase()
                                 .includes("лекц");
-
                               return (
                                 <td
                                   key={group}
                                   colSpan={consecutiveCount}
-                                  className={`border-r border-slate-200 p-2 transition-all`}
+                                  className="border-r border-slate-200 p-2 transition-all"
                                 >
                                   <div
                                     className={`h-full rounded-2xl p-3 text-center shadow-sm border flex flex-col justify-center gap-1 ${
                                       isLecture
-                                        ? "bg-blue-50 border-blue-200 text-blue-900 shadow-blue-100/50"
-                                        : "bg-emerald-50 border-emerald-200 text-emerald-900 shadow-emerald-100/50"
+                                        ? "bg-blue-50 border-blue-200 text-blue-900"
+                                        : "bg-emerald-50 border-emerald-200 text-emerald-900"
                                     }`}
                                   >
                                     <div className="font-black leading-tight uppercase tracking-tighter text-[11px] opacity-70 mb-1">
                                       {lesson.lesson_type}
                                     </div>
-                                    <div className="font-bold text-[14px] leading-snug drop-shadow-sm">
+                                    <div className="font-bold text-[14px] leading-snug">
                                       {lesson.course_name}
                                     </div>
                                     <div className="flex flex-col gap-0.5 mt-1">

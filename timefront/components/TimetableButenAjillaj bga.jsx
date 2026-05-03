@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TeacherScheduleTable from "@/components/TeacherScheduleTable";
+import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
+
 
 const Timetable = () => {
   const [data, setData] = useState([]);
@@ -9,6 +12,81 @@ const Timetable = () => {
   const [loading, setLoading] = useState(true); // auth болон data ачааллаж байна
   const router = useRouter();
 
+  const downloadExcel = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/schedule/excel/", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Excel татахад алдаа гарлаа");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "schedule.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert("Excel татахад алдаа гарлаа");
+    }
+  };
+
+
+  const downloadImage = async () => {
+    const element = document.getElementById("student-schedule");
+    if (!element) return;
+  
+    // Scroll wrapper олох (overflow-x: auto байгаа div)
+    const scrollWrapper = element.querySelector(".overflow-x-auto");
+    const table = element.querySelector("table");
+  
+    // Бүтэн өргөнийг table-с авах
+    const fullWidth = table ? table.scrollWidth : element.scrollWidth;
+    const fullHeight = element.scrollHeight;
+  
+    // Overflow-г түр арилгах → бүтэн table харагдана
+    const origOverflow = scrollWrapper?.style.overflow;
+    if (scrollWrapper) scrollWrapper.style.overflow = "visible";
+  
+    // Sticky-г түр арилгах
+    const stickyEls = element.querySelectorAll(".sticky");
+    stickyEls.forEach(el => {
+      el.dataset.origPos = el.style.position;
+      el.style.position = "static";
+    });
+  
+    try {
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        width: fullWidth,
+        height: fullHeight,
+        style: {
+          width: fullWidth + "px",
+          height: fullHeight + "px",
+          overflow: "visible",
+        },
+      });
+  
+      const link = document.createElement("a");
+      link.download = "schedule.png";
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      // Бүгдийг буцааж тавих
+      if (scrollWrapper) scrollWrapper.style.overflow = origOverflow || "";
+      stickyEls.forEach(el => {
+        el.style.position = el.dataset.origPos || "";
+        delete el.dataset.origPos;
+      });
+    }
+  };
 
   useEffect(() => {
     // Хэрэглэгч auth эсэхийг backend-аас шалгах
@@ -59,6 +137,25 @@ const Timetable = () => {
       alert("PDF татахад алдаа гарлаа");
     }
   };
+
+  // const downloadImage = async () => {
+
+  //   const element = document.getElementById("student-schedule");
+
+  //   if (!element) return;
+
+  //   const canvas = await html2canvas(element, {
+  //     scale: 3, // чанар ↑
+  //     useCORS: true,
+  //     backgroundColor: "#ffffff",
+  //   });
+
+  //   const link = document.createElement("a");
+  //   link.download = "schedule.png";
+  //   link.href = canvas.toDataURL("image/png");
+  //   link.click();
+  // };
+
   useEffect(() => {
     fetch("http://localhost:8000/", {
       credentials: "include",
@@ -90,7 +187,9 @@ const Timetable = () => {
   if (data === null) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-slate-500 font-medium">Давхцал гарлаа эсвэл бүх slot дүүрсэн байна. Шинэ цаг нэмэх үү?</p>
+        <p className="text-slate-500 font-medium">
+          Давхцал гарлаа эсвэл бүх slot дүүрсэн байна. Шинэ цаг нэмнэ үү!
+        </p>
       </div>
     );
   }
@@ -113,7 +212,6 @@ const Timetable = () => {
     Fri: "Баасан",
   };
   const orderedDays = ["Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан"];
-
   const groupedByDay = data.reduce((acc, item) => {
     const day = dayMap[item.day] || item.day;
     if (!acc[day]) acc[day] = [];
@@ -187,13 +285,34 @@ const Timetable = () => {
               onClick={downloadPdf}
               className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors"
             >
-              PDF татах
+              PDF-ээр татах
             </button>
+            <button
+              onClick={downloadImage}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700"
+            >
+              Зурагаар татах
+            </button>
+            {/* <button
+              onClick={downloadExcel}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700"
+            >
+              Excel татах
+            </button> */}
           </div>
 
           {/* Table Container */}
-          <div className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+
+          <div
+            id="student-schedule"
+            style={{ color: "#000", background: "#fff" }}
+
+            className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden"
+          >
+            <div
+              className="overflow-x-auto custom-scrollbar"
+              id="capture-wrapper"
+            >
               <table className="min-w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-slate-800 text-white">

@@ -23,7 +23,7 @@ const TeacherScheduleTable = () => {
       .catch((err) => console.error(err));
   }, []);
 
-  // LOADING UI
+  // LOADING UI2
   if (!data.length)
     return (
       <div className="flex justify-center items-center h-64">
