@@ -34,7 +34,7 @@ teacher_days_off = {
     for i in Teacher.objects.values("name", "days_off")
     if i["days_off"]  # [] байвал орохгүй
 }
-
+print(f'#######1{teacher_days_off}')
 
 def is_conflict(schedule, new):
     nd, nt, nr, course = new

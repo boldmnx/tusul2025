@@ -168,7 +168,7 @@ const Timetable = () => {
 
   return (
     <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-400 shadow-sm">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">
             Хичээлийн нэгдсэн хуваарь
@@ -211,7 +211,7 @@ const Timetable = () => {
         Оюутны хичээлийн хуваарь
       </button>
       {openSection === "student" && (
-        <div className="mt-4 bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden">
+        <div className="mt-4 bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-400 overflow-hidden">
           <h2 className="text-xl font-bold mb-4">Оюутны хичээлийн хуваарь</h2>
           <div className="flex justify-end gap-2 mb-4">
             <button
@@ -231,32 +231,40 @@ const Timetable = () => {
           <div
             id="student-schedule"
             style={{ color: "#000", background: "#fff" }}
-            className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-200 overflow-hidden"
+            className="bg-white shadow-xl shadow-slate-200/50 rounded-[2rem] border border-slate-400 overflow-hidden"
           >
             <div
               className="overflow-x-auto custom-scrollbar"
               id="capture-wrapper"
             >
               <table className="min-w-full border-collapse text-[13px]">
+              {/* <table className="min-w-full border-collapse text-[13px] border-2 border-slate-700"> */}
+
                 <thead>
                   <tr className="bg-slate-800 text-white">
-                    <th className="py-4 px-4 border-r border-slate-700 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-800">
+                  {/* <tr className="bg-slate-800 text-white border-b-2 border-slate-600"> */}
+
+                    {/* <th className="py-4 px-4 border-r border-slate-900 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-800"> */}
+                    <th className="py-4 px-4 border-r border-slate-900 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-800">
+
                       Өдөр
                     </th>
-                    <th className="py-4 px-4 border-r border-slate-700 font-black uppercase tracking-wider sticky left-[78px] z-20 bg-slate-800">
+                    <th className="py-4 px-4 border-r-2 border-slate-600 font-black uppercase tracking-wider sticky left-[78px] z-20 bg-slate-800">
                       Цаг
                     </th>
                     {groupsList.map((g) => (
                       <th
                         key={g}
-                        className="py-4 px-3 border-r border-slate-700 font-bold min-w-[140px] leading-tight"
+                        className="py-4 px-3 border-r border-slate-900 font-bold min-w-[140px] leading-tight"
                       >
                         {g}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                {/* <tbody className="divide-y divide-slate-200"> */}
+                <tbody className="divide-y-2 divide-slate-400">
+
                   {orderedDays.map((day) => {
                     const lessons = groupedByDay[day] || [];
                     const groupedByTime = lessons.reduce((acc, l) => {
@@ -294,14 +302,16 @@ const Timetable = () => {
                           {i === 0 && (
                             <td
                               rowSpan={times.length}
-                              className="border-r border-slate-200 text-center font-black bg-slate-50 text-slate-700 uppercase vertical-text sticky left-0 z-10 w-20"
+                              className="border-r-2 border-slate-500 text-center font-black bg-slate-50 text-slate-700 uppercase vertical-text sticky left-0 z-10 w-20"
+                              // className="border-r border-slate-400 text-center font-black bg-slate-50 text-slate-700 uppercase vertical-text sticky left-0 z-10 w-20"
                             >
                               <span className="rotate-180 [writing-mode:vertical-lr]">
                                 {day}
                               </span>
                             </td>
                           )}
-                          <td className="border-r border-slate-200 py-4 px-3 text-center font-bold text-slate-500 bg-white sticky left-[78px] z-10 whitespace-nowrap">
+                          <td className="border-r-2 border-slate-500 py-4 px-3 text-center font-bold text-slate-500 bg-white sticky left-[78px] z-10 whitespace-nowrap">
+                          {/* <td className="border-r border-slate-400 py-4 px-3 text-center font-bold text-slate-500 bg-white sticky left-[78px] z-10 whitespace-nowrap"> */}
                             {time}
                           </td>
                           {groupsList.map((group) => {
@@ -330,7 +340,8 @@ const Timetable = () => {
                                 <td
                                   key={group}
                                   colSpan={consecutiveCount}
-                                  className="border-r border-slate-200 p-2 transition-all"
+                                  className="border-r-2 border-slate-500 p-2 transition-all"
+                                  // className="border-r border-slate-400 p-2 transition-all"
                                 >
                                   <div
                                     className={`h-full rounded-2xl p-3 text-center shadow-sm border flex flex-col justify-center gap-1 ${
@@ -361,7 +372,8 @@ const Timetable = () => {
                             return (
                               <td
                                 key={group}
-                                className="border-r border-slate-100 p-2"
+                                className="border-r-2 border-slate-400 p-2"
+                                // className="border-r border-slate-300 p-2"
                               ></td>
                             );
                           })}

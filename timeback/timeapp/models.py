@@ -13,7 +13,6 @@ class Teacher(models.Model):
     photo = models.ImageField(upload_to="teachers/", blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
-    # ✅ ШИНЭ — ["Mon", "Wed"] гэх мэт хадгална
     days_off = models.JSONField(default=list, blank=True)
 
     def __str__(self):
